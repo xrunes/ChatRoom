@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天室 - 局域网聊天室</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/chat.css">
+</head>
+<body>
+    <div class="chat-container">
+        <header class="chat-header">
+            <h1>局域网聊天室</h1>
+            <div class="user-info">
+                <img id="current-user-avatar" src="" alt="头像" class="avatar">
+                <span id="current-user-name"></span>
+                <button id="back-to-users" class="btn btn-secondary">切换用户</button>
+            </div>
+        </header>
+        
+        <main class="chat-main">
+            <div id="messages-container" class="messages-container">
+                <!-- 消息将通过JS动态生成 -->
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="input-actions">
+                    <label for="image-input" class="btn btn-icon" title="发送图片">
+                        📎
+                        <input type="file" id="image-input" accept="image/*" multiple style="display: none;">
+                    </label>
+                </div>
+                <input type="text" id="message-input" placeholder="输入消息..." maxlength="1000">
+                <button id="send-btn" class="btn btn-primary">发送</button>
+            </div>
+        </main>
+        
+        <div id="image-preview-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <img id="preview-image" src="" alt="预览图片">
+                <div class="image-meta">
+                    <span id="preview-filename"></span>
+                    <span id="preview-filesize"></span>
+                    <a id="download-link" href="" download class="btn btn-primary">下载原图</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/chat.js"></script>
+</body>
+</html>

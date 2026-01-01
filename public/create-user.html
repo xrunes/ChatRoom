@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建用户 - 局域网聊天室</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/create-user.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>创建新用户</h1>
+            <p>设置您的用户名和头像</p>
+        </header>
+        
+        <main>
+            <form id="create-user-form" class="create-user-form">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" required maxlength="20">
+                </div>
+                
+                <div class="form-group">
+                    <label for="avatar-upload">头像 (可选)</label>
+                    <div class="avatar-upload-container">
+                        <div class="avatar-preview">
+                            <img id="avatar-preview" src="images/default-avatar.png" alt="头像预览">
+                        </div>
+                        <div class="avatar-upload-actions">
+                            <label for="avatar-upload" class="btn btn-secondary">选择图片</label>
+                            <input type="file" id="avatar-upload" name="avatar" accept="image/*" style="display: none;">
+                            <button type="button" id="remove-avatar" class="btn btn-secondary">移除头像</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="cancel-btn" class="btn btn-secondary">取消</button>
+                    <button type="submit" class="btn btn-primary">创建用户</button>
+                </div>
+            </form>
+        </main>
+    </div>
+    
+    <script src="js/create-user.js"></script>
+</body>
+</html>
