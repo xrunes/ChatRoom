@@ -1,6 +1,5 @@
 # Dependency directories
 node_modules/
-jspm_packages/
 
 # Chat Data
 chat_data/
