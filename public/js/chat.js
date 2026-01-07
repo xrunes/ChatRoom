@@ -60,11 +60,16 @@ async function initializeChat(userId) {
 function setupEventListeners() {
     // 发送消息
     document.getElementById('send-btn').addEventListener('click', sendTextMessage);
-    document.getElementById('message-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            sendTextMessage();
-        }
-    });
+    
+    // 消息输入框按键处理
+    const messageInput = document.getElementById('message-input');
+    messageInput.addEventListener('keydown', handleKeyDown);
+    
+    // 输入框输入事件，自动调整高度
+    messageInput.addEventListener('input', autoResizeTextarea);
+    
+    // 伸缩按钮
+    document.getElementById('toggle-expand').addEventListener('click', toggleExpandTextarea);
     
     // 图片上传
     document.getElementById('image-input').addEventListener('change', handleImageUpload);
@@ -88,6 +93,72 @@ function setupEventListeners() {
     socket.on('user_left', handleUserLeft);
 }
 
+// 处理键盘事件
+function handleKeyDown(e) {
+    if (e.key === 'Enter') {
+        if (e.ctrlKey || e.metaKey) {
+            // Ctrl+Enter 或 Cmd+Enter: 插入换行
+            e.preventDefault();
+            insertNewline();
+        } else {
+            // 纯 Enter: 发送消息
+            e.preventDefault();
+            sendTextMessage();
+        }
+    }
+}
+
+// 插入换行
+function insertNewline() {
+    const input = document.getElementById('message-input');
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const value = input.value;
+    
+    // 在光标位置插入换行
+    input.value = value.substring(0, start) + '\n' + value.substring(end);
+    
+    // 移动光标到新位置
+    input.selectionStart = input.selectionEnd = start + 1;
+    
+    // 触发输入事件以调整高度
+    input.dispatchEvent(new Event('input'));
+}
+
+// 自动调整文本区域高度
+function autoResizeTextarea() {
+    const textarea = document.getElementById('message-input');
+    
+    // 重置高度，让scrollHeight正确计算
+    textarea.style.height = 'auto';
+    
+    // 设置新高度，但不超过最大高度
+    const newHeight = Math.min(textarea.scrollHeight, 200);
+    textarea.style.height = newHeight + 'px';
+}
+
+// 切换文本区域展开/收缩
+function toggleExpandTextarea() {
+    const textarea = document.getElementById('message-input');
+    const toggleBtn = document.getElementById('toggle-expand');
+    
+    textarea.classList.toggle('expanded');
+    toggleBtn.classList.toggle('expanded');
+    
+    if (textarea.classList.contains('expanded')) {
+        textarea.style.height = '120px';
+        toggleBtn.title = '收缩输入框';
+        toggleBtn.textContent = '⬇️';
+    } else {
+        autoResizeTextarea(); // 恢复自动高度
+        toggleBtn.title = '展开输入框';
+        toggleBtn.textContent = '⬆️';
+    }
+    
+    // 聚焦到输入框
+    textarea.focus();
+}
+
 // 加载历史消息
 async function loadMessages() {
     try {
@@ -104,10 +175,13 @@ async function loadMessages() {
     }
 }
 
-// 发送文字消息
+// 发送文字消息（修改后的版本）
 function sendTextMessage() {
     const input = document.getElementById('message-input');
-    const content = input.value.trim();
+    let content = input.value.trim();
+    
+    // 处理换行，将连续多个换行转换为一个
+    content = content.replace(/\n{3,}/g, '\n\n');
     
     if (content === '') {
         return;
@@ -118,7 +192,14 @@ function sendTextMessage() {
         sender: currentUser
     });
     
+    // 清空输入框并重置高度
     input.value = '';
+    autoResizeTextarea();
+    
+    // 如果输入框是展开状态，发送后自动收缩
+    if (input.classList.contains('expanded')) {
+        toggleExpandTextarea();
+    }
 }
 
 // 处理图片上传
@@ -183,19 +264,22 @@ function displayMessage(message, shouldScroll = true) {
     const time = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
     if (message.type === 'text') {
+        // 处理换行符，将 \n 转换为 <br>
+        const formattedContent = escapeHtml(message.content).replace(/\n/g, '<br>');
+        
         messageElement.innerHTML = `
             <div class="message-header">
-                <img src="/chat_data/avatars/${message.sender.avatar}" alt="${message.sender.username}" class="message-avatar" onerror="this.src='images/default-avatar.png'">
+                <img src="/chat_data/avatars/${message.sender.avatar}" alt="${message.sender.username}" class="message-avatar" onerror="this.onerror=null; this.src='/images/default-avatar.png'">
                 <span class="message-sender">${message.sender.username}</span>
                 <span class="message-time">${time}</span>
             </div>
-            <div class="message-content">${escapeHtml(message.content)}</div>
+            <div class="message-content text-message">${formattedContent}</div>
         `;
     } else if (message.type === 'image') {
         const fileSize = formatFileSize(message.fileSize);
         messageElement.innerHTML = `
             <div class="message-header">
-                <img src="/chat_data/avatars/${message.sender.avatar}" alt="${message.sender.username}" class="message-avatar" onerror="this.src='images/default-avatar.png'">
+                <img src="/chat_data/avatars/${message.sender.avatar}" alt="${message.sender.username}" class="message-avatar" onerror="this.onerror=null; this.src='/images/default-avatar.png'">
                 <span class="message-sender">${message.sender.username}</span>
                 <span class="message-time">${time}</span>
             </div>

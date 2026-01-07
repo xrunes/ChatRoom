@@ -124,11 +124,13 @@
     background-color: white;
     border-top: 1px solid #ddd;
     gap: 10px;
+    align-items: flex-end; /* 底部对齐 */
 }
 
 .input-actions {
     display: flex;
     align-items: center;
+    gap: 5px;
 }
 
 #message-input {
@@ -137,11 +139,39 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
+    font-family: inherit;
+    resize: none; /* 禁止手动调整大小 */
+    min-height: 40px;
+    max-height: 200px;
+    line-height: 1.4;
+    overflow-y: auto;
+    transition: height 0.2s ease;
 }
 
 #message-input:focus {
     outline: none;
     border-color: #3498db;
+}
+
+#message-input.expanded {
+    min-height: 120px; /* 展开时的高度 */
+}
+
+/* 输入框提示文本 */
+.input-hint {
+    font-size: 12px;
+    color: #7f8c8d;
+    text-align: center;
+    margin-top: 5px;
+}
+
+/* 伸缩按钮样式 */
+#toggle-expand {
+    transition: transform 0.3s ease;
+}
+
+#toggle-expand.expanded {
+    transform: rotate(180deg);
 }
 
 #image-preview-modal .modal-content {
@@ -168,4 +198,25 @@
     font-style: italic;
     margin: 10px 0;
     font-size: 14px;
+}
+
+/* 文字消息样式 */
+.text-message {
+    white-space: pre-wrap; /* 保留换行和空格 */
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+/* 消息中的链接样式 */
+.text-message a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.text-message a:hover {
+    text-decoration: underline;
+}
+
+.message.own .text-message a {
+    color: #e1f5fe;
 }

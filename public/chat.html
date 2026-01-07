@@ -29,8 +29,9 @@
                         📎
                         <input type="file" id="image-input" accept="image/*" multiple style="display: none;">
                     </label>
+                    <button id="toggle-expand" class="btn btn-icon" title="展开输入框">⬆️</button>
                 </div>
-                <input type="text" id="message-input" placeholder="输入消息..." maxlength="1000">
+                <textarea id="message-input" placeholder="输入消息... (Ctrl+Enter 换行，Enter 发送)" maxlength="1000" rows="1"></textarea>
                 <button id="send-btn" class="btn btn-primary">发送</button>
             </div>
         </main>
