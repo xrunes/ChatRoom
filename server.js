@@ -24,10 +24,20 @@ async function ensureDirectories() {
   await fs.mkdir(IMAGES_DIR, { recursive: true });
   await fs.mkdir(AVATARS_DIR, { recursive: true });
   
-  // 初始化用户文件
+  // 初始化用户文件 - 确保格式正确
   try {
     await fs.access(USERS_FILE);
+    // 文件存在，检查内容
+    const data = await fs.readFile(USERS_FILE, 'utf8');
+    if (data.trim() === '') {
+      // 文件为空，写入正确格式
+      await fs.writeFile(USERS_FILE, JSON.stringify({ users: [] }, null, 2));
+    } else {
+      // 尝试解析，如果失败则重置
+      JSON.parse(data);
+    }
   } catch {
+    // 文件不存在或格式错误，创建新文件
     await fs.writeFile(USERS_FILE, JSON.stringify({ users: [] }, null, 2));
   }
   
@@ -72,7 +82,11 @@ const avatarStorage = multer.diskStorage({
 
 const avatarUpload = multer({ 
   storage: avatarStorage,
-  limits: { fileSize: Infinity }
+  limits: { fileSize: Infinity },
+  fileFilter: function (req, file, cb) {
+    // 允许所有文件类型
+    cb(null, true);
+  }
 });
 
 // 静态文件服务
@@ -84,8 +98,26 @@ app.use('/chat_data', express.static(CHAT_DATA_DIR));
 // 获取所有用户
 app.get('/api/users', async (req, res) => {
   try {
-    const data = await fs.readFile(USERS_FILE, 'utf8');
-    const usersData = JSON.parse(data);
+    let usersData;
+    try {
+      const data = await fs.readFile(USERS_FILE, 'utf8');
+      if (data.trim() === '') {
+        // 如果文件为空，初始化空数组
+        usersData = { users: [] };
+      } else {
+        usersData = JSON.parse(data);
+      }
+    } catch (error) {
+      // 如果文件不存在或格式错误，初始化空数组
+      console.log('用户文件读取失败，初始化为空:', error.message);
+      usersData = { users: [] };
+    }
+    
+    // 确保数据结构正确
+    if (!usersData.users) {
+      usersData.users = [];
+    }
+    
     res.json(usersData.users);
   } catch (error) {
     console.error('获取用户列表错误:', error);
@@ -95,6 +127,10 @@ app.get('/api/users', async (req, res) => {
 
 // 创建新用户
 app.post('/api/users', avatarUpload.single('avatar'), async (req, res) => {
+  // 在创建用户路由中添加详细日志
+  console.log('收到创建用户请求:', req.body);
+  console.log('上传的文件:', req.file);
+
   try {
     const { username } = req.body;
     
@@ -102,8 +138,21 @@ app.post('/api/users', avatarUpload.single('avatar'), async (req, res) => {
       return res.status(400).json({ error: '用户名不能为空' });
     }
     
-    // 读取现有用户
-    const usersData = JSON.parse(await fs.readFile(USERS_FILE, 'utf8'));
+    // 读取现有用户 - 添加更健壮的错误处理
+    let usersData = { users: [] };
+    try {
+      const data = await fs.readFile(USERS_FILE, 'utf8');
+      if (data.trim() !== '') {
+        usersData = JSON.parse(data);
+      }
+    } catch (error) {
+      console.log('读取用户文件失败，使用空数据:', error.message);
+    }
+    
+    // 确保数据结构正确
+    if (!usersData.users) {
+      usersData.users = [];
+    }
     
     // 检查用户名是否已存在
     if (usersData.users.some(user => user.username === username)) {
@@ -140,7 +189,7 @@ app.post('/api/users', avatarUpload.single('avatar'), async (req, res) => {
     res.json(newUser);
   } catch (error) {
     console.error('创建用户错误:', error);
-    res.status(500).json({ error: '创建用户失败' });
+    res.status(500).json({ error: '创建用户失败: ' + error.message });
   }
 });
 
